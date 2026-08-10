@@ -111,6 +111,52 @@ async function fetchPage(
   return Array.isArray(json?.results) ? (json.results as EtsyRawListing[]) : [];
 }
 
+interface EtsyBatchImage {
+  rank?: number;
+  url_75x75?: string;
+  url_170x135?: string;
+  alt_text?: string;
+}
+
+/**
+ * The search endpoint doesn't return images, but /listings/batch does when asked
+ * with includes=Images. Fetch thumbnails for the given ids (up to 100 per call)
+ * and return a map of listing_id → thumbnail URL. Failures are non-fatal.
+ */
+async function fetchThumbnails(
+  cfg: EtsyConfig,
+  ids: number[],
+): Promise<Map<number, string>> {
+  const map = new Map<number, string>();
+
+  for (let i = 0; i < ids.length; i += PAGE_SIZE) {
+    const chunk = ids.slice(i, i + PAGE_SIZE);
+    const url = new URL(`${ETSY_BASE}/listings/batch`);
+    url.searchParams.set('listing_ids', chunk.join(','));
+    url.searchParams.set('includes', 'Images');
+
+    try {
+      const res = await fetch(url.toString(), {
+        headers: { 'x-api-key': apiKeyHeader(cfg), Accept: 'application/json' },
+        cache: 'no-store',
+      });
+      if (!res.ok) continue; // skip this chunk, keep whatever we have
+      const json = await res.json();
+      for (const l of json?.results ?? []) {
+        const imgs: EtsyBatchImage[] = Array.isArray(l.images) ? l.images : [];
+        if (!imgs.length) continue;
+        const primary = imgs.find((im) => im.rank === 1) ?? imgs[0];
+        const thumb = primary.url_170x135 || primary.url_75x75;
+        if (thumb) map.set(l.listing_id, thumb);
+      }
+    } catch {
+      /* non-fatal — listings just render without a thumbnail */
+    }
+  }
+
+  return map;
+}
+
 /** Fetch live listings from Etsy, paging until we hit the requested limit. */
 export async function fetchLiveListings(
   cfg: EtsyConfig,
@@ -127,6 +173,13 @@ export async function fetchLiveListings(
     collected.push(...page.map(normalize));
     offset += page.length;
     if (page.length < pageLimit) break; // reached the end
+  }
+
+  // Attach thumbnails in a second pass (the search endpoint omits images).
+  const thumbs = await fetchThumbnails(cfg, collected.map((l) => l.id));
+  for (const l of collected) {
+    const t = thumbs.get(l.id);
+    if (t) l.thumbnailUrl = t;
   }
 
   return collected;

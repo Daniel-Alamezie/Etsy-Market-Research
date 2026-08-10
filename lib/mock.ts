@@ -45,6 +45,17 @@ function pick<T>(arr: T[], rng: () => number): T {
   return arr[Math.floor(rng() * arr.length) % arr.length];
 }
 
+/** A deterministic colored SVG placeholder thumbnail (mock has no real images). */
+function mockThumb(index: number, letter: string): string {
+  const hue = (index * 47) % 360;
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'>` +
+    `<rect width='80' height='80' rx='10' fill='hsl(${hue},42%,72%)'/>` +
+    `<text x='50%' y='55%' font-size='38' text-anchor='middle' dominant-baseline='middle' ` +
+    `font-family='sans-serif' fill='hsl(${hue},45%,32%)'>${letter}</text></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 /**
  * Build a realistic-looking set of listings for a keyword so the entire UI can
  * be exercised before the live API key is approved. Not real data — clearly
@@ -91,6 +102,7 @@ export function buildMockListings(params: SearchParams): Listing[] {
       url: 'https://www.etsy.com/search?q=' + encodeURIComponent(kw),
       shopName: `${pick(STYLE_WORDS, rng)}PrintCo`,
       quantity: 999,
+      thumbnailUrl: mockThumb(i, (kwTitle.charAt(0) || 'E').toUpperCase()),
     });
   }
 

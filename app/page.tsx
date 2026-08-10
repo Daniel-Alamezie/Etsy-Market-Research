@@ -25,8 +25,8 @@ const SORT_OPTIONS = [
   { value: 'score:desc', label: 'Relevance' },
   { value: 'created:desc', label: 'Newest first' },
   { value: 'created:asc', label: 'Oldest first' },
-  { value: 'price:asc', label: 'Price: low → high' },
-  { value: 'price:desc', label: 'Price: high → low' },
+  { value: 'price:asc', label: 'Price: low to high' },
+  { value: 'price:desc', label: 'Price: high to low' },
 ];
 
 const LIMIT_OPTIONS = [
@@ -63,7 +63,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tableSort, setTableSort] = useState<TableSort>({ key: 'favorites', dir: 'desc' });
-  const [currency, setCurrency] = useState<DisplayCurrency>('USD');
+  const [currency, setCurrency] = useState<DisplayCurrency>('GBP');
 
   useEffect(() => {
     fetch('/api/etsy/status')
@@ -139,7 +139,7 @@ export default function Home() {
           <div className="brand-mark">E</div>
           <div>
             <h1>Etsy Niche Research</h1>
-            <p>Prices · tags · favorites · listing age — public data only</p>
+            <p>Prices, tags, favorites and listing age, from public Etsy data</p>
           </div>
         </div>
         <div className="topbar-right">
@@ -159,9 +159,9 @@ export default function Home() {
       <div className="caveat" role="note">
         <span aria-hidden>ⓘ</span>
         <span>
-          <b>Favorites, not sales.</b> Etsy&apos;s API doesn&apos;t expose units sold, so
-          <b> Favorites</b> (❤) is used as the demand proxy. Use these numbers for
-          pricing &amp; competition; pair with EverBee for sales estimates.
+          <b>Favorites, not sales.</b> Etsy does not tell us how many items a listing has
+          sold, so we use favorites as a rough sign of demand. It is good for judging price
+          and competition. For sales estimates, use it alongside a tool like EverBee.
         </span>
       </div>
 
@@ -190,9 +190,9 @@ export default function Home() {
       )}
 
       <p className="footnote">
-        Personal research tool · Data via Etsy Open API v3 · Prices shown in {currency}
-        {data && !data.fxLive ? ' (approx. rates)' : ''} · Favorites are a demand proxy, not
-        verified sales.
+        Personal research tool. Data from the Etsy Open API. Prices shown in {currency}
+        {data && !data.fxLive ? ' using approximate exchange rates' : ''}. Favorites are a
+        rough sign of demand, not confirmed sales.
       </p>
     </div>
   );
@@ -236,7 +236,7 @@ function StatusBadge({ status, mode }: { status: StatusResponse | null; mode?: '
   const isLive = mode === 'live' || (mode == null && status?.keyActive === true);
   const cls = isLive ? 'live' : 'mock';
   const label = isLive ? 'Live data' : 'Sample data';
-  const title = status?.message ?? 'Checking connection…';
+  const title = status?.message ?? 'Checking connection';
   return (
     <span className={`status-badge ${cls}`} title={title}>
       <span className="dot" />
@@ -325,7 +325,7 @@ function SearchForm({
         </div>
         <div className="field field-submit">
           <button className="btn-primary" type="submit" disabled={loading}>
-            {loading ? 'Analyzing…' : 'Analyze'}
+            {loading ? 'Analyzing...' : 'Analyze'}
           </button>
         </div>
       </form>
@@ -366,26 +366,26 @@ function Results({
         <Stat
           label="Listings analyzed"
           value={compact(s.count)}
-          hint={`sample pulled for “${data.params.keyword}”`}
+          hint={`sample pulled for "${data.params.keyword}"`}
         />
         <Stat
           label="Typical price"
           value={money(s.price.median, currency)}
-          hint="the median — half cost more, half less"
-          tip="Median is more reliable than the average because one very expensive listing can't skew it. Average is shown below for comparison."
-          extra={`avg ${money(s.price.mean, currency)}`}
+          hint="the median, so half cost more and half cost less"
+          tip="The median is more reliable than the average, because one very expensive listing cannot pull it up. The average is shown below for comparison."
+          extra={`average ${money(s.price.mean, currency)}`}
         />
         <Stat
           label="Price range"
-          value={`${money(s.price.min, currency)} – ${money(s.price.max, currency)}`}
-          hint="cheapest → most expensive listing"
+          value={`${money(s.price.min, currency)} to ${money(s.price.max, currency)}`}
+          hint="from the cheapest to the most expensive listing"
         />
         <Stat
           label="Typical favorites"
           value={compact(Math.round(s.favorites.mean))}
-          hint="avg ❤ per listing — demand proxy"
-          tip="Favorites (num_favorers) is the closest signal to demand the API exposes. It is NOT sales. High favorites on few listings can signal an opening."
-          extra={`top listing ${compact(s.favorites.max)} ❤`}
+          hint="average favorites per listing, a rough sign of demand"
+          tip="Favorites is the closest thing to demand the API gives us. It is not the number of sales. A lot of favorites on only a few listings can point to an opening."
+          extra={`top listing ${compact(s.favorites.max)} favorites`}
         />
       </div>
 
@@ -393,13 +393,13 @@ function Results({
         <div className="card card-pad">
           <div className="panel-head">
             <h3 className="section-title">Price distribution</h3>
-            <span className="panel-sub">where competitors cluster ({currency})</span>
+            <span className="panel-sub">where sellers set their prices ({currency})</span>
           </div>
           <div className="hist">
             {s.priceBuckets.map((b, i) => (
               <div className="hist-row" key={i}>
                 <span className="hist-label">
-                  {money(b.min, currency)}–{money(b.max, currency)}
+                  {money(b.min, currency)} to {money(b.max, currency)}
                 </span>
                 <div className="hist-track">
                   <div className="hist-bar" style={{ width: `${(b.count / maxBucket) * 100}%` }} />
@@ -409,32 +409,32 @@ function Results({
             ))}
           </div>
           <p className="panel-foot">
-            The tall bars are the crowded price points — a gap with demand nearby can be
-            room to position.
+            The longest bars are the most common price points. A quiet gap between the
+            busy ones can be a good place to price your own listing.
           </p>
         </div>
 
         <div className="card card-pad">
           <div className="panel-head">
             <h3 className="section-title">Top competitor tags</h3>
-            <span className="panel-sub">most-used keywords = your SEO shortlist</span>
+            <span className="panel-sub">the keywords sellers use most</span>
           </div>
           {s.topTags.length ? (
             <div className="tag-cloud">
               {s.topTags.map((t) => (
-                <span className="tag" key={t.tag} title={`${t.count} of ${s.count} listings use “${t.tag}”`}>
+                <span className="tag" key={t.tag} title={`${t.count} of ${s.count} listings use "${t.tag}"`}>
                   {t.tag}
                   <span className="n">{t.count}</span>
                 </span>
               ))}
             </div>
           ) : (
-            <p style={{ color: 'var(--text-faint)' }}>No tags returned for this query.</p>
+            <p style={{ color: 'var(--text-faint)' }}>No tags returned for this search.</p>
           )}
           <p className="panel-foot">
-            Freshness: <b>{percent(s.dateRange.freshShare)}</b> of listings created recently
-            ({fromEpoch(s.dateRange.oldest ?? 0)} → {fromEpoch(s.dateRange.newest ?? 0)}) — a
-            high share means the niche is actively heating up.
+            <b>{percent(s.dateRange.freshShare)}</b> of these listings are recent
+            ({fromEpoch(s.dateRange.oldest ?? 0)} to {fromEpoch(s.dateRange.newest ?? 0)}). A
+            high share means a lot of new listings are going up.
           </p>
         </div>
       </div>
@@ -445,10 +445,10 @@ function Results({
             <h3 className="section-title" style={{ margin: 0 }}>
               Listings ({listings.length})
             </h3>
-            <span className="panel-sub">click a column to sort · prices in {currency}</span>
+            <span className="panel-sub">Click a column to sort. Prices in {currency}.</span>
           </div>
           <button className="btn-ghost" onClick={() => exportCsv(data, listings, currency)}>
-            ↓ Export CSV
+            Export CSV
           </button>
         </div>
         <div className="table-scroll">
@@ -458,7 +458,7 @@ function Results({
                 <th className="rank-col">#</th>
                 <Th label="Title" col="title" sort={tableSort} onSort={onTableSort} />
                 <Th label="Price" col="price" sort={tableSort} onSort={onTableSort} num />
-                <Th label="Favorites ❤" col="favorites" sort={tableSort} onSort={onTableSort} num />
+                <Th label="Favorites" col="favorites" sort={tableSort} onSort={onTableSort} num />
                 <Th label="Created" col="createdTimestamp" sort={tableSort} onSort={onTableSort} num />
               </tr>
             </thead>
@@ -469,19 +469,36 @@ function Results({
                   <tr key={l.id}>
                     <td className="rank-cell">{i + 1}</td>
                     <td className="title-cell">
-                      <a
-                        className="title-primary"
-                        href={l.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={decodeEntities(l.title)}
-                      >
-                        {primary}
-                      </a>
-                      <div className="title-rest">
-                        {l.shopName ? <span className="title-shop">{l.shopName}</span> : null}
-                        {l.shopName && rest ? ' · ' : ''}
-                        {rest}
+                      <div className="title-row">
+                        {l.thumbnailUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            className="thumb"
+                            src={l.thumbnailUrl}
+                            alt=""
+                            width={44}
+                            height={44}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="thumb thumb-ph" aria-hidden />
+                        )}
+                        <div className="title-text">
+                          <a
+                            className="title-primary"
+                            href={l.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={decodeEntities(l.title)}
+                          >
+                            {primary}
+                          </a>
+                          <div className="title-rest">
+                            {l.shopName ? <span className="title-shop">{l.shopName}</span> : null}
+                            {l.shopName && rest ? ', ' : ''}
+                            {rest}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="num">{money(l.price, currency)}</td>
@@ -559,7 +576,7 @@ function LoadingState() {
   return (
     <div className="card card-pad loading">
       <div className="spinner" />
-      <div>Pulling listings and crunching the numbers…</div>
+      <div>Loading listings and working out the numbers.</div>
     </div>
   );
 }

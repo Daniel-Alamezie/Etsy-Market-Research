@@ -33,8 +33,8 @@ describe('percent', () => {
 });
 
 describe('fromEpoch', () => {
-  it('returns a dash for 0/empty', () => {
-    expect(fromEpoch(0)).toBe('—');
+  it('returns a placeholder for 0/empty', () => {
+    expect(fromEpoch(0)).toBe('n/a');
   });
   it('formats a real timestamp with the year', () => {
     // 2026-08-10 UTC
@@ -61,12 +61,12 @@ describe('splitTitle', () => {
   it('splits on pipes, keeping the first segment as the name', () => {
     const { primary, rest } = splitTitle('Verdant Mist | Large Abstract | Sage Green Wall Art');
     expect(primary).toBe('Verdant Mist');
-    expect(rest).toBe('Large Abstract · Sage Green Wall Art');
+    expect(rest).toBe('Large Abstract, Sage Green Wall Art');
   });
   it('falls back to commas when there are no pipes', () => {
     const { primary, rest } = splitTitle('Textured 3D Plaster Wall Art, Wabi Sabi, Neutral Art');
     expect(primary).toBe('Textured 3D Plaster Wall Art');
-    expect(rest).toBe('Wabi Sabi · Neutral Art');
+    expect(rest).toBe('Wabi Sabi, Neutral Art');
   });
   it('decodes entities inside the title', () => {
     const { primary } = splitTitle('Wall Art 28&quot;x20&quot; | Extra Keywords');

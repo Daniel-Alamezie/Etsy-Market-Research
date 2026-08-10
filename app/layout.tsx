@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Etsy Niche Research',
   description:
-    'Analyze public Etsy listing data — prices, tags, favorites, and dates — to gauge pricing and competition across print niches.',
+    'Analyze public Etsy listing data (prices, tags, favorites and dates) to judge pricing and competition across print niches.',
 };
 
 export default function RootLayout({

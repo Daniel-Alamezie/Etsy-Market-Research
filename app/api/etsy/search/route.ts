@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   const cfg = getConfig();
   const wantMock = req.nextUrl.searchParams.get('mock') === 'true';
 
-  // Decide mode: explicit mock request, forced mock, or missing keys → mock.
+  // Decide mode: explicit mock request, forced mock, or missing keys.
   const useMock = wantMock || cfg.forceMock || !isConfigured(cfg);
 
   const { rates, live: fxLive } = await getRates();
@@ -84,9 +84,9 @@ export async function GET(req: NextRequest) {
   if (useMock) {
     let warning: string | undefined;
     if (!isConfigured(cfg)) {
-      warning = 'No API keys set — showing sample data. Add keys to .env.local for live results.';
+      warning = 'No API keys set, so sample data is shown. Add keys to .env.local for live results.';
     } else if (cfg.forceMock) {
-      warning = 'ETSY_FORCE_MOCK is on — showing sample data.';
+      warning = 'ETSY_FORCE_MOCK is on, so sample data is shown.';
     }
     return NextResponse.json(build('mock', getMockListings(params), warning));
   }
@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
       warning =
         `Etsy rejected the key (HTTP ${status}). It's likely still pending approval or the secret is wrong. Showing sample data meanwhile.`;
     } else if (status === 429) {
-      warning = 'Hit Etsy rate limit (HTTP 429). Showing sample data — try again shortly.';
+      warning = 'Hit Etsy rate limit (HTTP 429). Showing sample data, try again shortly.';
     } else {
       warning =
         `Live fetch failed (${isEtsy ? 'HTTP ' + status : (err as Error).message}). Showing sample data.`;

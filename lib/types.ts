@@ -9,6 +9,8 @@ export interface Listing {
   currency: string;
   /** Price normalized to USD (set server-side via FX rates). */
   priceUsd?: number;
+  /** Small thumbnail image URL (fetched via the batch/Images endpoint). */
+  thumbnailUrl?: string;
   /** Number of users who favorited the listing — our best demand proxy. */
   favorites: number;
   /** Epoch seconds when the listing was created. */
@@ -33,7 +35,6 @@ export interface SearchParams {
 }
 
 export interface PriceBucket {
-  label: string;
   min: number;
   max: number;
   count: number;

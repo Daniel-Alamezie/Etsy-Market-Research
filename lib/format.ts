@@ -17,7 +17,7 @@ export function compact(n: number): string {
 }
 
 export function fromEpoch(sec: number): string {
-  if (!sec) return '—';
+  if (!sec) return 'n/a';
   return new Date(sec * 1000).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -55,6 +55,6 @@ export function splitTitle(raw: string): { primary: string; rest: string } {
     parts = t.split(/[,–—]/).map((s) => s.trim()).filter(Boolean);
   }
   const primary = parts[0] || t;
-  const rest = parts.slice(1).join(' · ');
+  const rest = parts.slice(1).join(', ');
   return { primary, rest };
 }

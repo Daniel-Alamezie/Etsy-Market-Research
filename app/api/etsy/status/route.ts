@@ -26,7 +26,7 @@ export async function GET() {
       configured: true,
       forceMock: true,
       keyActive: null,
-      message: 'Keys detected, but ETSY_FORCE_MOCK is on — using sample data.',
+      message: 'Keys detected, but ETSY_FORCE_MOCK is on, so sample data is being used.',
     };
     return NextResponse.json(body);
   }
@@ -54,7 +54,7 @@ export async function GET() {
       forceMock: false,
       keyActive: false,
       message: pending
-        ? `Keys detected but Etsy returned HTTP ${status} — the key is probably still "Pending Personal Approval". Sample data will be used until it activates.`
+        ? `Keys detected but Etsy returned HTTP ${status}. The key is probably still "Pending Personal Approval", so sample data will be used until it activates.`
         : `Keys detected but the probe failed (${status || (err as Error).message}). Using sample data.`,
     };
     return NextResponse.json(body);

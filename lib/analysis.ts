@@ -15,19 +15,14 @@ function buildPriceBuckets(prices: number[]): PriceBucket[] {
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   if (min === max) {
-    return [{ label: `$${min.toFixed(0)}`, min, max, count: prices.length }];
+    return [{ min, max, count: prices.length }];
   }
   const BUCKETS = 8;
   const width = (max - min) / BUCKETS;
   const buckets: PriceBucket[] = Array.from({ length: BUCKETS }, (_, i) => {
     const lo = min + i * width;
     const hi = i === BUCKETS - 1 ? max : min + (i + 1) * width;
-    return {
-      label: `$${lo.toFixed(0)}–$${hi.toFixed(0)}`,
-      min: lo,
-      max: hi,
-      count: 0,
-    };
+    return { min: lo, max: hi, count: 0 };
   });
   for (const p of prices) {
     let idx = Math.floor((p - min) / width);
