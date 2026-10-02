@@ -163,3 +163,10 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 
 *Not affiliated with Etsy. "Etsy" is a trademark of Etsy, Inc. This tool reads
 public listing data only and does not sign in as a seller or access private data.*
+
+## Optional shop sales history
+
+Set `APIFY_TOKEN` to append a **30d sales / trend** column from the hosted
+`publicrecords/etsy-shop-velocity` panel (no scraping on your side). Off without
+the token. Shops without history return `no_coverage` free and are queued for
+the next day. Requires `apify-client`.
