@@ -9,6 +9,7 @@ import {
 import { analyze } from '@/lib/analysis';
 import { getRates, toUsd } from '@/lib/fx';
 import type { SearchParams, SearchResponse, Listing } from '@/lib/types';
+import { shopVelocity } from '@/lib/shopVelocity';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,11 +54,11 @@ export async function GET(req: NextRequest) {
 
   const { rates, live: fxLive } = await getRates();
 
-  const build = (
+  const build = async (
     mode: 'live' | 'mock',
     rawListings: Listing[],
     warning?: string,
-  ): SearchResponse => {
+  ): Promise<SearchResponse> => {
     // Normalize every listing to USD so mixed-currency results are comparable.
     const listings: Listing[] = rawListings.map((l) => ({
       ...l,
@@ -69,6 +70,20 @@ export async function GET(req: NextRequest) {
       price: l.priceUsd as number,
       currency: 'USD',
     }));
+    const shops = [
+      ...new Set(
+        listings
+          .map((l) => l.shopName)
+          .filter((s): s is string => typeof s === 'string' && s.length > 0),
+      ),
+    ];
+    let velocity: SearchResponse['shopVelocity'];
+    try {
+      velocity = await shopVelocity(shops);
+      if (Object.keys(velocity).length === 0) velocity = undefined;
+    } catch {
+      velocity = undefined;
+    }
     return {
       mode,
       params,
@@ -78,6 +93,7 @@ export async function GET(req: NextRequest) {
       fxLive,
       warning,
       fetchedAt: new Date().toISOString(),
+      shopVelocity: velocity,
     };
   };
 
@@ -88,14 +104,14 @@ export async function GET(req: NextRequest) {
     } else if (cfg.forceMock) {
       warning = 'ETSY_FORCE_MOCK is on, so sample data is shown.';
     }
-    return NextResponse.json(build('mock', getMockListings(params), warning));
+    return NextResponse.json(await build('mock', getMockListings(params), warning));
   }
 
   // Live mode: try the real API, but degrade gracefully to mock on failure
   // (very common while the key is still "Pending Personal Approval").
   try {
     const listings = await fetchLiveListings(cfg, params);
-    return NextResponse.json(build('live', listings));
+    return NextResponse.json(await build('live', listings));
   } catch (err) {
     const isEtsy = err instanceof EtsyApiError;
     const status = isEtsy ? err.status : 0;
@@ -109,6 +125,6 @@ export async function GET(req: NextRequest) {
       warning =
         `Live fetch failed (${isEtsy ? 'HTTP ' + status : (err as Error).message}). Showing sample data.`;
     }
-    return NextResponse.json(build('mock', getMockListings(params), warning));
+    return NextResponse.json(await build('mock', getMockListings(params), warning));
   }
 }

@@ -460,6 +460,8 @@ function Results({
                 <Th label="Price" col="price" sort={tableSort} onSort={onTableSort} num />
                 <Th label="Favorites" col="favorites" sort={tableSort} onSort={onTableSort} num />
                 <Th label="Created" col="createdTimestamp" sort={tableSort} onSort={onTableSort} num />
+                {data.shopVelocity ? <th className="num">30d sales</th> : null}
+                {data.shopVelocity ? <th className="num">Trend</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -504,6 +506,24 @@ function Results({
                     <td className="num">{money(l.price, currency)}</td>
                     <td className="num">{compact(l.favorites)}</td>
                     <td className="num">{fromEpoch(l.createdTimestamp)}</td>
+                    {data.shopVelocity ? (
+                      <td className="num">
+                        {(() => {
+                          const v = l.shopName ? data.shopVelocity![l.shopName] : undefined;
+                          if (!v || v.status === 'no_coverage' || v.sales30d == null) return 'n/a';
+                          return compact(v.sales30d);
+                        })()}
+                      </td>
+                    ) : null}
+                    {data.shopVelocity ? (
+                      <td className="num">
+                        {(() => {
+                          const v = l.shopName ? data.shopVelocity![l.shopName] : undefined;
+                          if (!v || v.status === 'no_coverage') return 'n/a';
+                          return v.breakout ? 'breakout' : '—';
+                        })()}
+                      </td>
+                    ) : null}
                   </tr>
                 );
               })}

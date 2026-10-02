@@ -69,6 +69,15 @@ export interface Summary {
   };
 }
 
+export interface ShopVelocityRow {
+  sales30d: number | null;
+  ratePerDay: number | null;
+  breakout: boolean | null;
+  readings: number;
+  fidelity: string | null;
+  status: 'ok' | 'no_coverage';
+}
+
 export interface SearchResponse {
   mode: 'live' | 'mock';
   params: SearchParams;
@@ -81,6 +90,8 @@ export interface SearchResponse {
   /** Non-fatal note surfaced to the UI (e.g. why we fell back to mock). */
   warning?: string;
   fetchedAt: string;
+  /** Optional hosted shop sales history (present only when APIFY_TOKEN is set). */
+  shopVelocity?: Record<string, ShopVelocityRow>;
 }
 
 export interface StatusResponse {
